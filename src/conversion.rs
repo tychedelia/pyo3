@@ -484,38 +484,6 @@ impl<T: ?Sized + ToPyObject> ToPyObject for &'_ T {
     }
 }
 
-pub trait ExtractPyClassRef<'py>
-where
-    Self: PyClass,
-{
-    fn extract_ref(obj: &Bound<'py, PyAny>) -> PyResult<PyRef<'py, Self>>;
-}
-
-impl<'py, T> ExtractPyClassRef<'py> for T
-where
-    T: PyClass,
-{
-    fn extract_ref(obj: &Bound<'py, PyAny>) -> PyResult<PyRef<'py, T>> {
-        obj.downcast::<T>()?.try_borrow().map_err(Into::into)
-    }
-}
-
-pub trait ExtractPyClassRefMut<'py>
-where
-    Self: PyClass<Frozen = False>,
-{
-    fn extract_mut(obj: &Bound<'py, PyAny>) -> PyResult<PyRefMut<'py, Self>>;
-}
-
-impl<'py, T> ExtractPyClassRefMut<'py> for T
-where
-    T: PyClass<Frozen = False>,
-{
-    fn extract_mut(obj: &Bound<'py, PyAny>) -> PyResult<PyRefMut<'py, T>> {
-        obj.downcast::<T>()?.try_borrow_mut().map_err(Into::into)
-    }
-}
-
 impl<T> FromPyObject<'_> for T
 where
     T: PyClass + Clone,
@@ -531,7 +499,7 @@ where
     T: PyClass,
 {
     fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
-        T::extract_ref(obj)
+        obj.downcast::<T>()?.try_borrow().map_err(Into::into)
     }
 }
 
@@ -540,7 +508,7 @@ where
     T: PyClass<Frozen = False>,
 {
     fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
-        T::extract_mut(obj)
+        obj.downcast::<T>()?.try_borrow_mut().map_err(Into::into)
     }
 }
 

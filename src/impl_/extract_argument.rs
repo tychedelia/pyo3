@@ -92,12 +92,57 @@ impl<T> FunctionArgumentHolder for Option<T> {
     const INIT: Self = None;
 }
 
+pub trait ExtractPyClassRef<'a, 'py>
+where
+    Self: PyClass,
+{
+    fn extract_ref(
+        obj: &Bound<'py, PyAny>,
+        holder: &'a mut Option<PyRef<'py, Self>>,
+    ) -> PyResult<&'a Self>;
+}
+
+impl<'a, 'py, T> ExtractPyClassRef<'a, 'py> for T
+where
+    T: PyClass,
+{
+    fn extract_ref(
+        obj: &Bound<'py, PyAny>,
+        holder: &'a mut Option<PyRef<'py, T>>,
+    ) -> PyResult<&'a T> {
+        Ok(&*holder.insert(obj.extract()?))
+    }
+}
+
+pub trait ExtractPyClassRefMut<'py, 'a>
+where
+    Self: PyClass<Frozen = False>,
+{
+    fn extract_mut(
+        obj: &'a Bound<'py, PyAny>,
+        holder: &'a mut Option<PyRefMut<'py, Self>>,
+    ) -> PyResult<&'a mut Self>;
+}
+
+impl<'a, 'py, T> ExtractPyClassRefMut<'a, 'py> for T
+where
+    T: PyClass<Frozen = False>,
+{
+    fn extract_mut(
+        obj: &'a Bound<'py, PyAny>,
+
+        holder: &'a mut Option<PyRefMut<'py, T>>,
+    ) -> PyResult<&'a mut T> {
+        Ok(&mut *holder.insert(obj.extract()?))
+    }
+}
+
 #[inline]
 pub fn extract_pyclass_ref<'a, 'py: 'a, T: PyClass>(
     obj: &'a Bound<'py, PyAny>,
     holder: &'a mut Option<PyRef<'py, T>>,
 ) -> PyResult<&'a T> {
-    Ok(&*holder.insert(obj.extract()?))
+    T::extract_ref(obj, holder)
 }
 
 #[inline]
@@ -105,7 +150,7 @@ pub fn extract_pyclass_ref_mut<'a, 'py: 'a, T: PyClass<Frozen = False>>(
     obj: &'a Bound<'py, PyAny>,
     holder: &'a mut Option<PyRefMut<'py, T>>,
 ) -> PyResult<&'a mut T> {
-    Ok(&mut *holder.insert(obj.extract()?))
+    T::extract_mut(obj, holder)
 }
 
 /// The standard implementation of how PyO3 extracts a `#[pyfunction]` or `#[pymethod]` function argument.
