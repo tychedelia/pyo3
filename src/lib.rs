@@ -22,6 +22,7 @@
         non_local_definitions,
     )
 )))]
+#![feature(min_specialization)]
 
 //! Rust bindings to the Python interpreter.
 //!

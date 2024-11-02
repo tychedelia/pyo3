@@ -106,7 +106,7 @@ impl<'a, 'py, T> ExtractPyClassRef<'a, 'py> for T
 where
     T: PyClass,
 {
-    fn extract_ref(
+    default fn extract_ref(
         obj: &'a Bound<'py, PyAny>,
         holder: &'a mut Option<PyRef<'py, T>>,
     ) -> PyResult<&'a T> {
@@ -128,7 +128,7 @@ impl<'a, 'py, T> ExtractPyClassRefMut<'a, 'py> for T
 where
     T: PyClass<Frozen = False>,
 {
-    fn extract_mut(
+    default fn extract_mut(
         obj: &'a Bound<'py, PyAny>,
         holder: &'a mut Option<PyRefMut<'py, T>>,
     ) -> PyResult<&'a mut T> {
