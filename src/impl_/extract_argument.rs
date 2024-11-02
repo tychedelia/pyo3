@@ -97,7 +97,7 @@ where
     Self: PyClass,
 {
     fn extract_ref(
-        obj: &Bound<'py, PyAny>,
+        obj: &'a Bound<'py, PyAny>,
         holder: &'a mut Option<PyRef<'py, Self>>,
     ) -> PyResult<&'a Self>;
 }
@@ -107,14 +107,14 @@ where
     T: PyClass,
 {
     fn extract_ref(
-        obj: &Bound<'py, PyAny>,
+        obj: &'a Bound<'py, PyAny>,
         holder: &'a mut Option<PyRef<'py, T>>,
     ) -> PyResult<&'a T> {
         Ok(&*holder.insert(obj.extract()?))
     }
 }
 
-pub trait ExtractPyClassRefMut<'py, 'a>
+pub trait ExtractPyClassRefMut<'a, 'py>
 where
     Self: PyClass<Frozen = False>,
 {
@@ -130,7 +130,6 @@ where
 {
     fn extract_mut(
         obj: &'a Bound<'py, PyAny>,
-
         holder: &'a mut Option<PyRefMut<'py, T>>,
     ) -> PyResult<&'a mut T> {
         Ok(&mut *holder.insert(obj.extract()?))
