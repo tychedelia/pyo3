@@ -198,7 +198,7 @@ pub trait PyClassImpl: Sized + 'static {
     /// Rendered class doc
     fn doc(py: Python<'_>) -> PyResult<&'static CStr>;
 
-    pub fn items_iter() -> PyClassItemsIter;
+    fn items_iter() -> PyClassItemsIter;
 
     #[inline]
     fn dict_offset() -> Option<ffi::Py_ssize_t> {
