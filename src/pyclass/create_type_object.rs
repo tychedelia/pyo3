@@ -562,7 +562,7 @@ unsafe extern "C" fn call_super_clear(slf: *mut ffi::PyObject) -> c_int {
 }
 
 #[derive(Default)]
-struct GetSetDefBuilder {
+pub struct GetSetDefBuilder {
     doc: Option<&'static CStr>,
     getter: Option<Getter>,
     setter: Option<Setter>,
