@@ -608,12 +608,12 @@ impl GetSetDefBuilder {
 }
 
 #[allow(dead_code)] // a stack of fields which are purely to cache until dropped
-struct GetSetDefDestructor {
+pub struct GetSetDefDestructor {
     closure: GetSetDefType,
 }
 
 /// Possible forms of property - either a getter, setter, or both
-enum GetSetDefType {
+pub enum GetSetDefType {
     Getter(Getter),
     Setter(Setter),
     // The box is here so that the `GetterAndSetter` has a stable
@@ -621,7 +621,7 @@ enum GetSetDefType {
     GetterAndSetter(Box<GetterAndSetter>),
 }
 
-pub(crate) struct GetterAndSetter {
+pub struct GetterAndSetter {
     getter: Getter,
     setter: Setter,
 }
