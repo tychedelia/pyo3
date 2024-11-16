@@ -104,16 +104,16 @@ pub struct PyClassAttributeDef {
 
 #[derive(Clone)]
 pub struct PyGetterDef {
-    pub(crate) name: &'static CStr,
-    pub(crate) meth: Getter,
-    pub(crate) doc: &'static CStr,
+    pub name: &'static CStr,
+    pub meth: Getter,
+    pub doc: &'static CStr,
 }
 
 #[derive(Clone)]
 pub struct PySetterDef {
-    pub(crate) name: &'static CStr,
-    pub(crate) meth: Setter,
-    pub(crate) doc: &'static CStr,
+    pub name: &'static CStr,
+    pub meth: Setter,
+    pub doc: &'static CStr,
 }
 
 unsafe impl Sync for PyMethodDef {}

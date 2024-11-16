@@ -569,7 +569,7 @@ pub struct GetSetDefBuilder {
 }
 
 impl GetSetDefBuilder {
-    fn add_getter(&mut self, getter: &PyGetterDef) {
+    pub fn add_getter(&mut self, getter: &PyGetterDef) {
         // TODO: be smarter about merging getter and setter docs
         if self.doc.is_none() {
             self.doc = Some(getter.doc);
@@ -578,7 +578,7 @@ impl GetSetDefBuilder {
         self.getter = Some(getter.meth)
     }
 
-    fn add_setter(&mut self, setter: &PySetterDef) {
+    pub fn add_setter(&mut self, setter: &PySetterDef) {
         // TODO: be smarter about merging getter and setter docs
         if self.doc.is_none() {
             self.doc = Some(setter.doc);
@@ -587,7 +587,7 @@ impl GetSetDefBuilder {
         self.setter = Some(setter.meth)
     }
 
-    fn as_get_set_def(&self, name: &'static CStr) -> (ffi::PyGetSetDef, GetSetDefDestructor) {
+    pub fn as_get_set_def(&self, name: &'static CStr) -> (ffi::PyGetSetDef, GetSetDefDestructor) {
         let getset_type = match (self.getter, self.setter) {
             (Some(getter), None) => GetSetDefType::Getter(getter),
             (None, Some(setter)) => GetSetDefType::Setter(setter),
