@@ -1,9 +1,17 @@
-use crate::{conversion::IntoPyObject, exceptions::{PyAttributeError, PyNotImplementedError, PyRuntimeError, PyValueError}, ffi, impl_::{
-    freelist::FreeList,
-    pycell::{GetBorrowChecker, PyClassMutability, PyClassObjectLayout},
-    pyclass_init::PyObjectInit,
-    pymethods::{PyGetterDef, PyMethodDefType},
-}, pycell::PyBorrowError, types::{any::PyAnyMethods, PyBool}, Borrowed, Bound, BoundObject, Py, PyAny, PyClass, PyErr, PyRef, PyResult, PyTypeInfo, Python};
+use crate::{
+    conversion::IntoPyObject,
+    exceptions::{PyAttributeError, PyNotImplementedError, PyRuntimeError, PyValueError},
+    ffi,
+    impl_::{
+        freelist::FreeList,
+        pycell::{GetBorrowChecker, PyClassMutability, PyClassObjectLayout},
+        pyclass_init::PyObjectInit,
+        pymethods::{PyGetterDef, PyMethodDefType},
+    },
+    pycell::PyBorrowError,
+    types::{any::PyAnyMethods, PyBool},
+    Borrowed, BoundObject, Py, PyAny, PyClass, PyErr, PyRef, PyResult, PyTypeInfo, Python,
+};
 #[allow(deprecated)]
 use crate::{IntoPy, ToPyObject};
 use std::{
@@ -1192,7 +1200,6 @@ pub fn class_offset<T: PyClass>() -> usize {
 
 // Used in generated implementations of OffsetCalculator
 pub use memoffset::offset_of;
-use crate::impl_::extract_argument::ExtractPyClassRef;
 
 /// Type which uses specialization on impl blocks to determine how to read a field from a Rust pyclass
 /// as part of a `#[pyo3(get)]` annotation.
@@ -1472,15 +1479,25 @@ where
     pub const VALUE: bool = true;
 }
 
+/// ensures `obj` is not mutably aliased
+#[inline]
+unsafe fn ensure_no_mutable_alias<'py, ClassT: PyClass>(
+    py: Python<'py>,
+    obj: &*mut ffi::PyObject,
+) -> Result<PyRef<'py, ClassT>, PyBorrowError> {
+    BoundRef::ref_from_ptr(py, obj)
+        .downcast_unchecked::<ClassT>()
+        .try_borrow()
+}
+
 /// calculates the field pointer from an PyObject pointer
 #[inline]
-fn field_from_object<ClassT, FieldT, Offset>(clazz: &ClassT) -> *const FieldT
+fn field_from_object<ClassT, FieldT, Offset>(obj: *mut ffi::PyObject) -> *mut FieldT
 where
-    ClassT: PyClass + for<'a, 'py> ExtractPyClassRef<'a, 'py>,
+    ClassT: PyClass,
     Offset: OffsetCalculator<ClassT, FieldT>,
 {
-
-    unsafe { (clazz as *const ClassT).cast::<u8>().add(Offset::offset()).cast::<FieldT>() }
+    unsafe { obj.cast::<u8>().add(Offset::offset()).cast::<FieldT>() }
 }
 
 #[allow(deprecated)]
@@ -1492,10 +1509,8 @@ fn pyo3_get_value_topyobject<
     py: Python<'_>,
     obj: *mut ffi::PyObject,
 ) -> PyResult<*mut ffi::PyObject> {
-    let bound = unsafe { Bound::ref_from_ptr(py, &obj) };
-    let mut holder = None;
-    let clazz = ClassT::extract_ref(bound, &mut holder)?;
-    let value = field_from_object::<ClassT, FieldT, Offset>(clazz);
+    let _holder = unsafe { ensure_no_mutable_alias::<ClassT>(py, &obj)? };
+    let value = field_from_object::<ClassT, FieldT, Offset>(obj);
 
     // SAFETY: Offset is known to describe the location of the value, and
     // _holder is preventing mutable aliasing
@@ -1511,10 +1526,8 @@ where
     for<'a, 'py> &'a FieldT: IntoPyObject<'py>,
     Offset: OffsetCalculator<ClassT, FieldT>,
 {
-    let bound = unsafe { Bound::ref_from_ptr(py, &obj) };
-    let mut holder = None;
-    let clazz = ClassT::extract_ref(bound, &mut holder)?;
-    let value = field_from_object::<ClassT, FieldT, Offset>(clazz);
+    let _holder = unsafe { ensure_no_mutable_alias::<ClassT>(py, &obj)? };
+    let value = field_from_object::<ClassT, FieldT, Offset>(obj);
 
     // SAFETY: Offset is known to describe the location of the value, and
     // _holder is preventing mutable aliasing
@@ -1533,10 +1546,8 @@ where
     for<'py> FieldT: IntoPyObject<'py> + Clone,
     Offset: OffsetCalculator<ClassT, FieldT>,
 {
-    let bound = unsafe { Bound::ref_from_ptr(py, &obj) };
-    let mut holder = None;
-    let clazz = ClassT::extract_ref(bound, &mut holder)?;
-    let value = field_from_object::<ClassT, FieldT, Offset>(clazz);
+    let _holder = unsafe { ensure_no_mutable_alias::<ClassT>(py, &obj)? };
+    let value = field_from_object::<ClassT, FieldT, Offset>(obj);
 
     // SAFETY: Offset is known to describe the location of the value, and
     // _holder is preventing mutable aliasing
@@ -1556,10 +1567,8 @@ fn pyo3_get_value<
     py: Python<'_>,
     obj: *mut ffi::PyObject,
 ) -> PyResult<*mut ffi::PyObject> {
-    let bound = unsafe { Bound::ref_from_ptr(py, &obj) };
-    let mut holder = None;
-    let clazz = ClassT::extract_ref(bound, &mut holder)?;
-    let value = field_from_object::<ClassT, FieldT, Offset>(clazz);
+    let _holder = unsafe { ensure_no_mutable_alias::<ClassT>(py, &obj)? };
+    let value = field_from_object::<ClassT, FieldT, Offset>(obj);
 
     // SAFETY: Offset is known to describe the location of the value, and
     // _holder is preventing mutable aliasing
